@@ -1,0 +1,285 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Q & A</title>
+    <meta charset="utf-8">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header id="header">
+        <nav class="left">
+            <a href="#menu"><span>Menu</span></a>
+        </nav>
+        <a href="main.html" class="logo">Weather Clothing</a>
+        <nav class="right">
+            <span id="userGreeting"></span>
+            <button id="logoutButton" class="button" style="display:none;">Logout</button>
+        </nav>
+    </header>
+
+    <!-- Menu -->
+    <nav id="menu">
+        <ul class="links">
+            <li><a href="main.html">Home</a></li>
+            <li><a href="forecast.html">Today's Weather</a></li>
+            <li><a href="clothing.html">Today's Clothing</a></li>
+            <li><a href="Q&A.html">Q & A</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Section -->
+    <section id="main" class="wrapper">
+        <div class="inner container">
+            <header class="align-center">
+                <h1>Q & A</h1>
+            </header>
+
+            <a href="write.html" class="button write" id="writeButton">글쓰기</a>
+
+            <div class="write-list">
+                <div class="write-header">
+                    <span>제목</span>
+                    <span>작성자</span>
+                    <span>답변여부</span>
+                    <span>작성일</span>
+                </div>
+                <ul id="postList"></ul>
+            </div>
+
+        <!-- Q&A 상세 내용 모달 -->
+        <div class="overlay" id="overlay"></div>
+        <div class="qa-item" id="qaDisplay">
+            <span class="close-btn" id="closeBtn">&times;</span>
+            <div class="content">
+                <p><strong>Title:</strong> <span id="qaTitle"></span></p>
+                <p><strong>Question:</strong> <span id="qaBody"></span></p>
+                <p><strong>Answer:</strong> <span id="qaAnswer"></span></p>
+            </div>
+            <div class="button-container">
+                <button id="deleteButton" class="button" style="display:none;">삭제</button> <!-- 삭제 버튼 -->
+                <button id="editButton" class="button" style="display:none;">수정</button> <!-- 수정 버튼 -->
+                <button id="answerButton" class="button" style="display:none;">답변</button> <!-- 답변 버튼 -->
+            </div>
+            <textarea id="answerInput" placeholder="내용을 입력하세요"></textarea> <!-- 답변 입력란 -->
+            <button id="submitAnswerButton" class="button">제출</button> <!-- 답변 제출 버튼 -->
+        </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="inner">
+            <h2>Get In Touch</h2>
+            <ul class="actions">
+                <li>Email: kimyunseo123@naver.com</li>
+                <li>Location: Chungbuk National University</li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.scrolly.min.js"></script>
+    <script src="js/skel.min.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/main.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+        import { getDatabase, ref, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyDA_tqnuDs49Z0hSRWqyPn6mI4cDrKw7Y8",
+            authDomain: "weatherclothing-f8f48.firebaseapp.com",
+            projectId: "weatherclothing-f8f48",
+            storageBucket: "weatherclothing-f8f48.appspot.com",
+            messagingSenderId: "16265501523",
+            appId: "1:16265501523:web:c725ab0b5bd1098c069fa6",
+            measurementId: "G-C2LX5EJSEG",
+            databaseURL: "https://weatherclothing-f8f48-default-rtdb.firebaseio.com/"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const userGreeting = document.getElementById('userGreeting');
+        const logoutButton = document.getElementById('logoutButton');
+        const postList = document.getElementById('postList');
+        const qaDisplay = document.getElementById('qaDisplay');
+        const qaTitle = document.getElementById('qaTitle');
+        const qaBody = document.getElementById('qaBody');
+        const qaAnswer = document.getElementById('qaAnswer');
+        const overlay = document.getElementById('overlay');
+        const closeBtn = document.getElementById('closeBtn');
+        const deleteButton = document.getElementById('deleteButton');
+        const editButton = document.getElementById('editButton');
+        const answerButton = document.getElementById('answerButton');
+        const answerInput = document.getElementById('answerInput');
+        const submitAnswerButton = document.getElementById('submitAnswerButton');
+
+        const ADMIN_UID = "RoLpVF0tRjfXhtu7Uk9SygOv8oy2";  // 관리자 UID
+
+        let currentPostId = null; // 현재 모달에서 보여지는 게시글의 ID
+
+        // 사용자 인증 상태 확인
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const displayName = user.displayName || "사용자";
+                userGreeting.innerHTML = `<span>${displayName}님</span>`;
+                logoutButton.style.display = 'inline-block';
+            } else {
+                userGreeting.innerHTML = `<a href="login.html" class="button alt">Login</a>`;
+                logoutButton.style.display = 'none';
+            }
+        });
+
+        // 로그아웃
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'main.html';  // 로그아웃 후 홈 페이지로 이동
+            } catch (error) {
+                console.error('Error signing out:', error.message); // 에러 메시지 출력
+            }
+        });
+
+        // 게시글 목록 가져오기 및 표시
+        onValue(ref(db, 'posts'), (snapshot) => {
+            const posts = snapshot.val();
+            postList.innerHTML = ''; // 기존 목록 비우기
+            if (posts) {
+                for (const id in posts) {
+                    const post = posts[id];
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <span>${post.title}</span>
+                        <span>${post.author}</span>
+                        <span>${post.hasAnswer ? 'Y' : 'N'}</span>
+                        <span>${new Date(post.timestamp).toLocaleDateString()}</span>
+                    `;
+                    listItem.addEventListener('click', () => {
+                        currentPostId = id; // 현재 모달에서 보여지는 게시글의 ID 저장
+                        qaTitle.textContent = post.title;
+                        qaBody.textContent = post.content;
+                        qaAnswer.textContent = post.hasAnswer ? post.answer : 'No answer yet';
+                        overlay.style.display = 'block';
+                        qaDisplay.style.display = 'block';
+
+                        // 삭제 버튼 및 수정 버튼 표시
+                        onAuthStateChanged(auth, (user) => {
+                            if (user && user.displayName === post.author) {
+                                deleteButton.style.display = 'inline-block'; // 작성자일 때만 삭제 버튼 표시
+                                if (!post.hasAnswer) {
+                                    editButton.style.display = 'inline-block'; // 답변이 없는 경우 수정 버튼 표시
+                                } else {
+                                    editButton.style.display = 'none'; // 답변이 있는 경우 수정 버튼 숨기기
+                                }
+                            } else {
+                                deleteButton.style.display = 'none';
+                                editButton.style.display = 'none';
+                            }
+
+                            // 답변 버튼 표시
+                            if (user && user.uid === ADMIN_UID) {
+                                answerButton.style.display = 'inline-block';
+                            } else {
+                                answerButton.style.display = 'none';
+                            }
+                        });
+                    });
+                    postList.appendChild(listItem);
+                }
+            } else {
+                postList.innerHTML = '<li>No posts</li>';
+            }
+        });
+
+        // 모달 닫기
+        closeBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            qaDisplay.style.display = 'none';
+            // Hide answer input and submit button
+            answerInput.style.display = 'none';
+            submitAnswerButton.style.display = 'none';
+            answerButton.style.display = 'inline-block';
+            editButton.style.display = 'none'; // 수정 버튼 숨기기
+        });
+
+        // 모달 클릭 시 닫기
+        overlay.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            qaDisplay.style.display = 'none';
+            // Hide answer input and submit button
+            answerInput.style.display = 'none';
+            submitAnswerButton.style.display = 'none';
+            answerButton.style.display = 'inline-block';
+            editButton.style.display = 'none'; // 수정 버튼 숨기기
+        });
+
+        // 게시글 삭제
+        deleteButton.addEventListener('click', async () => {
+            if (currentPostId) {
+                try {
+                    await remove(ref(db, 'posts/' + currentPostId));
+                    alert('게시글이 삭제되었습니다.');
+                    overlay.style.display = 'none';
+                    qaDisplay.style.display = 'none';
+                } catch (error) {
+                    console.error('Error deleting post: ', error.message); // 에러 메시지 출력
+                    alert(`게시글 삭제 중 오류가 발생했습니다: ${error.message}`);
+                }
+            }
+        });
+
+        // 답변 버튼 클릭 시 답변 입력란과 제출 버튼 표시
+        answerButton.addEventListener('click', () => {
+            answerInput.style.display = 'block';
+            submitAnswerButton.style.display = 'inline-block';
+            answerButton.style.display = 'none'; // Hide the answer button
+        });
+
+        // 답변 제출
+        submitAnswerButton.addEventListener('click', async () => {
+            const answer = answerInput.value.trim();
+            if (answer && currentPostId) {
+                try {
+                    await update(ref(db, 'posts/' + currentPostId), {
+                        answer: answer,
+                        hasAnswer: true
+                    });
+                    alert('답변이 저장되었습니다.');
+                    qaAnswer.textContent = answer;
+                    overlay.style.display = 'none';
+                    qaDisplay.style.display = 'none';
+                    // Hide answer input and submit button, show answer button again
+                    answerInput.style.display = 'none';
+                    submitAnswerButton.style.display = 'none';
+                    answerButton.style.display = 'inline-block';
+                    editButton.style.display = 'none'; // 수정 버튼 숨기기
+                } catch (error) {
+                    console.error('Error submitting answer: ', error.message); // 에러 메시지 출력
+                    alert(`답변 저장 중 오류가 발생했습니다: ${error.message}`);
+                }
+            }
+        });
+
+        editButton.addEventListener('click', () => {
+            if (currentPostId) {
+                window.location.href = `edit.html?id=${currentPostId}`; // 수정 페이지로 이동
+            }
+        });
+
+    </script>
+</body>
+</html>

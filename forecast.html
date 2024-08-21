@@ -1,0 +1,387 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Clothing</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* CSS for layout and styling */
+        #main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        #currentWeather, #dailyForecasts {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            margin-top: 24px;
+        }
+        #currentWeather {
+            text-align: center;
+            display: none; /* Initially hidden */
+            margin-top: 100px; /* Add space between search and current weather */
+        }
+        #currentWeather img {
+            width: 100px;
+            height: 100px;
+        }
+        #dailyForecasts {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            display: none; /* Initially hidden */
+        }
+        .forecastDay {
+            width: 18%;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 6px; /* Added padding */
+            border: 1px solid #ddd; /* Added border for better separation */
+            border-radius: 8px; /* Rounded corners */
+            background-color: #f9f9f9; /* Light background for better visibility */
+        }
+        .forecastDay img {
+            width: 100px;
+            height: 100px;
+        }
+        .forecastDay table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .forecastDay th, .forecastDay td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            white-space: nowrap; /* Prevent wrapping */
+        }
+        .forecastDay th {
+            background-color: #ddd; /* Updated header color with 50% opacity */
+            font-weight: bold;
+            border: 1px solid #fff;
+        }
+        .forecastDay td.time {
+            width: 30%; /* Reduced width for time */
+        }
+        .forecastDay td.temp {
+            width: 70%; /* Increased width for temperature */
+        }
+        .forecastDay p.date {
+            font-weight: bold; /* Make date bold */
+        }
+        .forecastDay p.wind,
+        .forecastDay p.precipitation,
+        #currentWeather p {
+            text-align: center; /* Align text to the left */
+            margin: 0; /* Remove default margin */
+            padding: 0; /* Remove default padding */
+        }
+        .forecastDay p {
+            margin-bottom: 5px; /* Adjust spacing between paragraphs */
+        }
+        .forecastDay .temperature {
+            white-space: nowrap; /* Prevents wrapping of temperature values */
+        }
+        #currentWeather .weather-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* Space between items */
+            margin-top: 20px;
+        }
+
+        #currentWeather .weather-info img {
+            width: 30px;
+            height: 30px;
+            vertical-align: middle;
+        }
+
+        #currentWeather .weather-info span {
+            font-size: 16px;
+            line-height: 30px; /* Align text with icons */
+            font-weight: bold;
+        }
+
+        .FiveDay {
+            display: none; /* Initially hidden */
+            margin-top: 100px; /* Add space above the daily forecasts */
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header id="header">
+        <nav class="left">
+            <a href="#menu"><span>Menu</span></a>
+        </nav>
+        <a href="main.html" class="logo">Weather Clothing</a>
+        <nav class="right">
+            <span id="userGreeting"></span>
+            <button id="logoutButton" class="button" style="display:none;">Logout</button>
+        </nav>
+    </header>
+
+    <!-- Menu -->
+    <nav id="menu">
+        <ul class="links">
+            <li><a href="main.html">Home</a></li>
+            <li><a href="forecast.html">Today's Weather</a></li>
+            <li><a href="clothing.html">Today's Clothing</a></li>
+            <li><a href="Q&A.html">Q & A</a></li>
+        </ul>
+    </nav>
+    
+    <section id="main" class="wrapper centered-content">
+        <div class="inner">
+            <header class="align-center">
+                <h1>Today's Weather</h1>
+                <p style="font-size: small; color: #666;">원하는 지역을 검색하면 해당 지역의 날씨 정보가 제공됩니다.</p>
+            </header>
+            <div>
+                <input id="city" type="text" placeholder=" ex. Seoul" oninput="updateButtonColor()">
+                <button id="searchButton" class="button" onclick="getWeather()">Search</button>
+            </div>
+
+            <!-- Current Weather -->
+            <div id="currentWeather">
+                <h3 id="forecastHeader">Today's Weather</h3>
+                <p id="currentDate" style="font-weight: bold;"></p>
+                <img id="currentWeatherIcon" src="" alt="Weather Icon">
+                <p id="description" style="font-weight: bold;"></p>
+                
+                <!-- Weather Information with Icons -->
+                <div class="weather-info">
+                    <img id="temperatureIcon" src="images/현재온도.png" alt="Temperature Icon">
+                    <span id="temperature"></span>
+                    <img id="windIcon" src="images/풍력.png" alt="Wind Icon">
+                    <span id="wind"></span>
+                    <img id="precipitationIcon" src="images/강수량.png" alt="Precipitation Icon">
+                    <span id="precipitation"></span>
+                </div>
+            </div>
+
+            <!-- 5-Day Weather Forecast -->
+            <div class="FiveDay" id="fiveDayForecast">
+                <h3>5-Day Weather Forecast</h3>
+            </div>
+            <!-- Daily Forecast -->
+            <div id="dailyForecasts">
+                <!-- Forecast items will be added dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="inner centered-content">
+            <h2>Get In Touch</h2>
+            <ul class="actions">
+                <li>kimyunseo123@naver.com</li>
+                <li>Chungbuk National University</li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.scrolly.min.js"></script>
+    <script src="js/skel.min.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- JavaScript Content (Updated) -->
+    <script>
+        async function getWeather() {
+            let city = document.getElementById("city").value.trim();
+            if (!city) {
+                alert("Please enter a city.");
+                return;
+            }
+
+            city = encodeURIComponent(city);
+            const apiKey = '2343c55dbf340490e0768e1015950a0e';
+            const urlCurrent = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+            const urlForecast = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+            try {
+                // Fetch current weather data
+                const responseCurrent = await fetch(urlCurrent);
+                if (!responseCurrent.ok) {
+                    throw new Error(`Current weather data fetch error: ${responseCurrent.statusText}`);
+                }
+                const dataCurrent = await responseCurrent.json();
+                
+                // Fetch 3-hour forecast data
+                const responseForecast = await fetch(urlForecast);
+                if (!responseForecast.ok) {
+                    throw new Error(`Forecast data fetch error: ${responseForecast.statusText}`);
+                }
+                const dataForecast = await responseForecast.json();
+
+                // Display current weather
+                const date = new Date().toISOString().split('T')[0];
+                document.getElementById("currentDate").textContent = `${date}`;
+                const weatherDescription = dataCurrent.weather[0].description.toLowerCase();
+                const weatherIcon = getWeatherIcon(weatherDescription);
+                document.getElementById("currentWeatherIcon").src = weatherIcon;
+                document.getElementById("description").textContent = `${weatherDescription}`;
+                document.getElementById("temperature").textContent = `Current Temperature: ${dataCurrent.main.temp} °C`;
+                document.getElementById("wind").textContent = `Wind: ${dataCurrent.wind.speed} km/h`;
+                document.getElementById("precipitation").textContent = `Rain: ${dataCurrent.rain ? (dataCurrent.rain['1h'] || 0) + ' mm' : '0 mm'}`;
+
+
+                // Display daily forecast
+                let dailyForecasts = document.getElementById("dailyForecasts");
+                dailyForecasts.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    const forecastData = dataForecast.list[i * 8];
+                    const forecastDate = forecastData.dt_txt.split(' ')[0];
+                    const forecastWind = forecastData.wind.speed;
+                    const forecastWeather = forecastData.weather[0].description.toLowerCase();
+                    const forecastIcon = getWeatherIcon(forecastWeather);
+                    const forecastPrecipitation = forecastData.rain ? (forecastData.rain['3h'] || 0) + ' mm' : '0 mm';
+
+                    let dayForecast = document.createElement('div');
+                    dayForecast.className = 'forecastDay';
+                    dayForecast.innerHTML = `
+                        <p class="date">${forecastDate}</p>
+                        <img src="${forecastIcon}" alt="Weather Icon">
+                        <p style="font-weight: bold;">${forecastWeather}</p>
+                        <p class="wind">Wind: ${forecastWind} km/h</p>
+                        <p class="precipitation">Rain: ${forecastPrecipitation}</p>
+                        <div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Temp (°C)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${getHourlyTableRows(dataForecast.list, i)}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    dailyForecasts.appendChild(dayForecast);
+                }
+
+                // Show sections after data is successfully fetched
+                document.getElementById("currentWeather").style.display = 'block';
+                document.getElementById("fiveDayForecast").style.display = 'block'; // Show 5-Day Forecast
+                document.getElementById("dailyForecasts").style.display = 'flex';
+
+                // Scroll smoothly to the "Today's Weather" header
+                document.getElementById('city').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to fetch weather data. Please try again later.');
+            }
+        }
+
+        function getHourlyTableRows(list, dayIndex) {
+    const timeOrder = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+    let rows = '';
+
+    // Gather data points for the specific day
+    let dayData = list.slice(dayIndex * 8, (dayIndex + 1) * 8);
+
+        // Iterate through the desired times
+        timeOrder.forEach(time => {
+            let found = false;
+
+            for (let data of dayData) {
+                const dataTime = data.dt_txt.split(' ')[1].slice(0, 5); // Extract HH:MM
+                if (dataTime === time) {
+                    const temp = data.main.temp;
+                    rows += `<tr><td class="time">${dataTime}</td><td class="temp">${temp}</td></tr>`;
+                    found = true;
+                    break;
+                }
+            }
+
+            // If no data was found for this time, insert a row with "N/A" or leave it empty
+            if (!found) {
+                rows += `<tr><td class="time">${time}</td><td class="temp">N/A</td></tr>`;
+            }
+        });
+
+        return rows;
+    }
+
+        function getWeatherIcon(description) {
+            if (description.includes('clear') || description.includes('sunny')) {
+                return 'images/clear.png';
+            } else if (description.includes('cloud')) {
+                return 'images/partly_cloudy.png';
+            } else if (description.includes('rain')) {
+                return 'images/rainy.png';
+            } else if (description.includes('thunderstorm') || description.includes('lighthen')) {
+                return 'images/lighting.png';
+            } else if (description.includes('snow')) {
+                return 'images/snow.png';
+            } else {
+                return 'images/unknown.png';
+            }
+        }
+
+        function updateButtonColor() {
+            let searchButton = document.getElementById("searchButton");
+            let cityInput = document.getElementById("city").value;
+            searchButton.style.backgroundColor = cityInput.length > 0 ? "#3a7abf" : "#82c4ff";
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDA_tqnuDs49Z0hSRWqyPn6mI4cDrKw7Y8",
+            authDomain: "weatherclothing-f8f48.firebaseapp.com",
+            projectId: "weatherclothing-f8f48",
+            storageBucket: "weatherclothing-f8f48.appspot.com",
+            messagingSenderId: "16265501523",
+            appId: "1:16265501523:web:c725ab0b5bd1098c069fa6",
+            measurementId: "G-C2LX5EJSEG"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+
+        const userGreeting = document.getElementById('userGreeting');
+        const logoutButton = document.getElementById('logoutButton');
+
+        // Check if user is signed in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const displayName = user.displayName || "사용자";
+                userGreeting.innerHTML = `<span>${displayName}님</span>`;
+                logoutButton.style.display = 'inline-block';
+            } else {
+                userGreeting.innerHTML = `<a href="login.html" class="button alt">Login</a>`;
+            }
+        });
+
+        // Logout user
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'main.html';  // Refresh page after logout
+            } catch (error) {
+                console.error('Error signing out:', error);
+            }
+        });
+    </script>
+</body>
+</html>

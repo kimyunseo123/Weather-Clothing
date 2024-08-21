@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Login</title>
+    <meta charset="utf-8">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header id="header">
+        <nav class="left">
+            <a href="#menu"><span>Menu</span></a>
+        </nav>
+        <a href="main.html" class="logo">Weather Clothing</a>
+        <nav class="right">
+            <a class="button alt" href="login.html">Login</a>
+        </nav>
+    </header>
+    
+    <!-- Menu -->
+    <nav id="menu">
+        <ul class="links">
+            <li><a href="main.html">Home</a></li>
+            <li><a href="forecast.html">Today's Weather</a></li>
+            <li><a href="clothing.html">Today's Clothing</a></li>
+            <li><a href="Q&A.html">Q & A</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Section -->
+    <section id="main" class="wrapper">
+        <div class="inner">
+            <header class="align-center">
+                <h1>Login</h1>
+            </header>
+            <div class="login-container">
+                <form id="loginForm" method="post" class="login-form">
+                    <div class="row">
+                        <label for="email">Email:</label>
+                        <input type="email" name="email" id="signinemail" placeholder="Enter your email" required />
+                    </div>
+                    <div class="row">
+                        <label for="password">Password:</label>
+                        <input type="password" name="password" id="signinpassword" placeholder="Enter your password" required />
+                    </div>
+                    <div class="row button-wrapper align-center">
+                        <button type="button" class="button" id="signInbutton">Login</button>
+                    </div>
+                </form>
+            </div>
+            <div class="align-center signup-link">
+                <p>Don't have an account?</p>
+                <a href="SignUp.html" class="button alt">Sign Up</a>
+            </div>
+            <script type="module">
+                // Import Firebase libraries
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+                import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+                import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+                // Your web app's Firebase configuration
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDA_tqnuDs49Z0hSRWqyPn6mI4cDrKw7Y8",
+                    authDomain: "weatherclothing-f8f48.firebaseapp.com",
+                    projectId: "weatherclothing-f8f48",
+                    storageBucket: "weatherclothing-f8f48.appspot.com",
+                    messagingSenderId: "16265501523",
+                    appId: "1:16265501523:web:c725ab0b5bd1098c069fa6",
+                    measurementId: "G-C2LX5EJSEG"
+                };
+
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const analytics = getAnalytics(app);
+                const auth = getAuth();
+
+                document.getElementById('signInbutton').addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    const email = document.getElementById('signinemail').value;
+                    const password = document.getElementById('signinpassword').value;
+
+                    try {
+                        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                        console.log('User signed in:', userCredential.user);
+                        window.location.href = 'main.html'; // Redirect to the main page
+                    } catch (error) {
+                        console.error('Error signing in:', error.code, error.message);
+                        alert(`이메일과 비밀번호를 다시 확인해주세요.`);
+                    }
+                });
+            </script>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="inner">
+            <h2>Get In Touch</h2>
+            <ul class="actions">
+                <li>Email: <a href="mailto:kimyunseo123@naver.com">kimyunseo123@naver.com</a></li>
+                <li>Location: Chungbuk National University</li>
+            </ul>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.scrolly.min.js"></script>
+    <script src="js/skel.min.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
